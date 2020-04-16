@@ -43,9 +43,6 @@ from .workflows_mgr import WorkflowsManager
 
 logger = logging.getLogger(__name__)
 
-# Avoid re-instantiation
-MIDDLEWARE = [IgnoreFieldMiddleware()]
-
 
 class MyApplication(web.Application):
     is_closing = False
@@ -146,7 +143,7 @@ class CylcUIServer(object):
             schema=schema,
             resolvers=self.resolvers,
             backend=GraphQLCoreBackend(),
-            middleware=MIDDLEWARE,
+            middleware=[IgnoreFieldMiddleware()],
             **kwargs
         )
 
@@ -161,7 +158,7 @@ class CylcUIServer(object):
         subscription_server = TornadoSubscriptionServer(
             schema,
             backend=GraphQLCoreBackend(),
-            middleware=MIDDLEWARE,
+            middleware=[IgnoreFieldMiddleware()],
         )
         return MyApplication(
             static_path=self._static,

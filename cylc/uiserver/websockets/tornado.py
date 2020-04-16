@@ -52,7 +52,6 @@ class TornadoSubscriptionServer(BaseSubscriptionServer):
             self.middleware = MiddlewareManager(*middleware, wrap_in_promise=False)
         else:
             self.middleware = None
-        self.strip_null = True
         super().__init__(schema, keep_alive)
 
     @staticmethod
@@ -72,7 +71,6 @@ class TornadoSubscriptionServer(BaseSubscriptionServer):
             executor=AsyncioExecutor(loop=self.loop),
             backend=self.backend,
             middleware=self.middleware,
-            strip_null=self.strip_null,
         )
 
     async def _handle(self, ws, request_context):
