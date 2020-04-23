@@ -44,7 +44,8 @@ from cylc.flow.network.scan import MSG_TIMEOUT
 from cylc.flow.network.subscriber import WorkflowSubscriber, process_delta_msg
 from cylc.flow.data_store_mgr import (
     EDGES, FAMILIES, FAMILY_PROXIES, JOBS, TASKS, TASK_PROXIES, WORKFLOW,
-    DATA_TEMPLATE, ALL_DELTAS, DELTAS_MAP, apply_delta, generate_checksum
+    DATA_TEMPLATE, ALL_DELTAS, DELTAS_MAP, apply_delta, generate_checksum,
+    create_delta_store
 )
 from .workflows_mgr import workflow_request
 
@@ -157,9 +158,13 @@ class DataStoreMgr:
                 apply_delta(field.name, sub_delta, self.data[w_id])
                 self.data[w_id]['delta_times'][field.name] = delta_time
                 self.reconcile_update(field.name, sub_delta, w_id)
+
         # Queue delta for graphql subscription resolving
-        for delta_queue in self.delta_queues[w_id].values():
-            delta_queue.put((w_id, topic, delta))
+        if self.delta_queues[w_id]:
+            delta_store = create_delta_store(delta)
+            delta_store['id'] = w_id
+            for delta_queue in self.delta_queues[w_id].values():
+                delta_queue.put((w_id, topic, delta_store))
 
     def reconcile_update(self, topic, delta, w_id):
         """Reconcile local with workflow data-store.
