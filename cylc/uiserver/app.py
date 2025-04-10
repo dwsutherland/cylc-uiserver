@@ -109,6 +109,8 @@ from cylc.uiserver.schema import schema
 from cylc.uiserver.websockets.tornado import TornadoSubscriptionServer
 from cylc.uiserver.workflows_mgr import WorkflowsManager
 
+from cylc.uiserver.memory_profiler import MemoryProfiler
+
 
 INFO_FILES_DIR = Path(USER_CONF_ROOT / "info_files")
 
@@ -436,6 +438,7 @@ class CylcUIServer(ExtensionApp):
             executor=self.executor,
             workflows_mgr=self.workflows_mgr,
         )
+        self.memory_profiler = MemoryProfiler(self, self.log)
 
     @property
     def config_file_paths(self) -> List[str]:
@@ -489,6 +492,12 @@ class CylcUIServer(ExtensionApp):
         ioloop.PeriodicCallback(
             self.workflows_mgr.scan,
             self.scan_interval * 1000
+        ).start()
+
+        # configure the profiling interval
+        ioloop.PeriodicCallback(
+            self.memory_profiler.log_object_sizes,
+            3 * 1000
         ).start()
 
     def initialize_handlers(self):
@@ -613,6 +622,9 @@ class CylcUIServer(ExtensionApp):
         del os.environ["JUPYTER_RUNTIME_DIR"]
 
     async def stop_extension(self):
+        # Report memory profile results
+        await self.memory_profiler.report()
+
         # stop the async scan task
         await self.workflows_mgr.stop()
 
