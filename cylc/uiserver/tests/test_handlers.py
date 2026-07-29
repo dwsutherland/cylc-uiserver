@@ -42,6 +42,7 @@ from cylc.uiserver.schema import schema
 class MyApplication(Application):
     ...
 
+
 class GraphQLHandlersTest(AsyncHTTPTestCase):
     """Test for TornadoGraphQLHandler/UIServerGraphQLHandler"""
 
@@ -276,7 +277,7 @@ class GraphQLHandlersTest(AsyncHTTPTestCase):
         # test an execution result with errors
         async def exe_gql_req3(data, query, variables, operation_name):
             return ExecutionResult(
-                errors = [
+                errors=[
                     GraphQLError('GQL error'),
                     ExecutionError(400, ['Some Exc error']),
                     Exception('random other error')
